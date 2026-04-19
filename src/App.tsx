@@ -13,6 +13,7 @@ import { SearchPage } from "@/pages/SearchPage";
 import { Bookmarks } from "@/pages/Bookmarks";
 import { DailyReadings } from "@/pages/DailyReadings";
 import { Pricing } from "@/pages/Pricing";
+import { Install } from "@/pages/Install";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/bookmarks" element={<Bookmarks />} />
             <Route path="/daily" element={<DailyReadings />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/install" element={<Install />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
