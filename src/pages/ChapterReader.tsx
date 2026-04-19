@@ -53,12 +53,14 @@ export const ChapterReader = () => {
       verse: verseNum,
       text,
     });
-    if (!result.ok && result.reason === "limit") {
-      toast.error("Free plan limit reached", {
-        description: "Free accounts can save 3 verses. Upgrade to save unlimited.",
-        action: { label: "Upgrade", onClick: () => navigate("/pricing") },
-      });
-    } else if (result.ok && result.created) {
+    if (!result.ok) {
+      if (result.reason === "limit") {
+        toast.error("Free plan limit reached", {
+          description: "Free accounts can save 3 verses. Upgrade to save unlimited.",
+          action: { label: "Upgrade", onClick: () => navigate("/pricing") },
+        });
+      }
+    } else if (result.created) {
       toast.success(`Saved ${book.name} ${chapterNum}:${verseNum}`);
     }
   };
