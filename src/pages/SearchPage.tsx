@@ -2,18 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Search as SearchIcon } from "lucide-react";
 import { BOOKS } from "@/data/books";
-import { VERSES_OF_THE_DAY } from "@/data/chapters";
-
-// Build a tiny searchable index from chapters we have loaded + the verse-of-day pool.
-// More thorough search will plug in once full chapter text loads on demand.
-import { getChapter } from "@/data/chapters";
-
-const SAMPLE_REFS: Array<{ bookId: string; chapter: number }> = [
-  { bookId: "genesis", chapter: 1 },
-  { bookId: "psalms", chapter: 23 },
-  { bookId: "john", chapter: 1 },
-  { bookId: "matthew", chapter: 5 },
-];
+import { VERSES_OF_THE_DAY, getAllCachedChapters } from "@/data/chapters";
 
 export const SearchPage = () => {
   const [q, setQ] = useState("");
@@ -21,28 +10,44 @@ export const SearchPage = () => {
   const results = useMemo(() => {
     const query = q.trim().toLowerCase();
     if (query.length < 2) return [];
-    const matches: Array<{ bookId: string; bookName: string; chapter: number; verse: number; text: string }> = [];
-    for (const ref of SAMPLE_REFS) {
-      const book = BOOKS.find((b) => b.id === ref.bookId);
+
+    const matches: Array<{
+      bookId: string;
+      bookName: string;
+      chapter: number;
+      verse: number;
+      text: string;
+    }> = [];
+
+    // Search across cached chapters first
+    const cached = getAllCachedChapters();
+    for (const ch of cached) {
+      const book = BOOKS.find((b) => b.id === ch.bookId);
       if (!book) continue;
-      const data = getChapter(ref.bookId, ref.chapter);
-      for (const v of data.verses) {
+      for (const v of ch.verses) {
         if (v.text.toLowerCase().includes(query)) {
           matches.push({
             bookId: book.id,
             bookName: book.name,
-            chapter: ref.chapter,
+            chapter: ch.chapter,
             verse: v.num,
             text: v.text,
           });
+          if (matches.length >= 80) break;
         }
       }
+      if (matches.length >= 80) break;
     }
-    // Also fold in our verse-of-day sample pool
+
+    // Always include verse-of-day pool as a quick discovery layer.
     for (const v of VERSES_OF_THE_DAY) {
-      if (v.text.toLowerCase().includes(query) && !matches.find((m) => m.bookId === v.bookId && m.chapter === v.chapter && m.verse === v.verse)) {
+      if (v.text.toLowerCase().includes(query)) {
         const book = BOOKS.find((b) => b.id === v.bookId);
-        if (book) {
+        if (!book) continue;
+        const exists = matches.find(
+          (m) => m.bookId === v.bookId && m.chapter === v.chapter && m.verse === v.verse
+        );
+        if (!exists) {
           matches.push({
             bookId: book.id,
             bookName: book.name,
@@ -53,8 +58,10 @@ export const SearchPage = () => {
         }
       }
     }
-    return matches.slice(0, 50);
+    return matches.slice(0, 80);
   }, [q]);
+
+  const cachedCount = getAllCachedChapters().length;
 
   return (
     <div className="container max-w-2xl mx-auto px-4 py-8 animate-fade-in">
@@ -70,19 +77,20 @@ export const SearchPage = () => {
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search verses, e.g. 'light' or 'blessed'"
+          placeholder="Search verses, e.g. ‘light’ or ‘peace’"
           className="w-full pl-11 pr-4 py-3 rounded-full bg-card border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none font-ui text-sm"
         />
       </div>
 
       <p className="text-xs text-muted-foreground text-center mt-3 font-ui">
-        Searching loaded chapters. Full Bible search activates with live text loading.
+        Searching {cachedCount} chapter{cachedCount === 1 ? "" : "s"} you've opened.
+        Open more chapters to expand your search.
       </p>
 
       <div className="mt-6 space-y-2">
         {q.trim().length >= 2 && results.length === 0 && (
           <p className="text-center text-muted-foreground py-8 font-ui text-sm">
-            No matches. Try another word.
+            No matches in chapters you've opened yet. Try opening more chapters first.
           </p>
         )}
         {results.map((r) => (
