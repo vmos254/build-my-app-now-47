@@ -81,8 +81,8 @@ export const ChapterReader = () => {
     );
   }
 
-  const handleToggle = (verseNum: number, text: string) => {
-    const result = toggle({
+  const handleToggle = async (verseNum: number, text: string) => {
+    const result = await toggle({
       bookId: book.id,
       bookName: book.name,
       chapter: chapterNum,
