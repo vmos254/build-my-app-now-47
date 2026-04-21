@@ -1,30 +1,51 @@
-// Single source of truth for free vs premium gating.
-// Backed by Lovable Cloud subscriber state once Stripe is wired up.
+// Server-verified premium status, backed by the `subscribers` table in Lovable Cloud.
+// Anonymous users are never premium. Stripe checkout will populate the subscribers row.
 
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
-const KEY = "lumen.premium.preview";
-
-/**
- * Temporary client-side flag for previewing the premium experience.
- * Will be replaced by a server-verified subscription check.
- */
 export function usePremium() {
-  const [isPremium, setIsPremium] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem(KEY) === "1";
-    } catch {
-      return false;
-    }
-  });
+  const { user } = useAuth();
+  const [isPremium, setIsPremiumState] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(KEY, isPremium ? "1" : "0");
-    } catch {
-      /* ignore */
+    let cancelled = false;
+    if (!user) {
+      setIsPremiumState(false);
+      setLoading(false);
+      return;
     }
-  }, [isPremium]);
 
-  return { isPremium, setIsPremium };
+    setLoading(true);
+    (async () => {
+      const { data } = await supabase
+        .from("subscribers")
+        .select("subscribed, subscription_end")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      const active =
+        !!data?.subscribed &&
+        (!data.subscription_end || new Date(data.subscription_end) > new Date());
+
+      setIsPremiumState(active);
+      setLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  // Kept for backwards-compat with the Pricing preview button. Once Stripe
+  // is wired up, this becomes a no-op (server is the source of truth).
+  const setIsPremium = (_v: boolean) => {
+    // intentionally unused — premium status is set by Stripe webhook
+  };
+
+  return { isPremium, setIsPremium, loading };
 }
