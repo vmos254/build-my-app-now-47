@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { BookOpen, Bookmark, Calendar, Home, Search, Sparkles } from "lucide-react";
+import { BookOpen, Bookmark, Calendar, Home, LogIn, LogOut, Search, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
   { to: "/", label: "Home", icon: Home },
@@ -12,7 +13,9 @@ const navItems = [
 
 export const AppLayout = () => {
   const location = useLocation();
-  const hideChrome = location.pathname.startsWith("/auth");
+  const { user, signOut } = useAuth();
+  const hideChrome =
+    location.pathname.startsWith("/auth") || location.pathname.startsWith("/~oauth");
 
   if (hideChrome) {
     return (
@@ -35,12 +38,30 @@ export const AppLayout = () => {
               Lumen
             </span>
           </Link>
-          <Link
-            to="/pricing"
-            className="text-xs font-ui font-medium px-3 py-1.5 rounded-full bg-gradient-gold text-secondary-foreground shadow-soft hover:shadow-gold transition-shadow"
-          >
-            Go Premium
-          </Link>
+          <div className="flex items-center gap-2">
+            {user ? (
+              <button
+                onClick={() => signOut()}
+                className="text-xs font-ui font-medium px-3 py-1.5 rounded-full text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                aria-label="Sign out"
+              >
+                <LogOut className="w-3.5 h-3.5" /> Sign out
+              </button>
+            ) : (
+              <Link
+                to="/auth"
+                className="text-xs font-ui font-medium px-3 py-1.5 rounded-full text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+              >
+                <LogIn className="w-3.5 h-3.5" /> Sign in
+              </Link>
+            )}
+            <Link
+              to="/pricing"
+              className="text-xs font-ui font-medium px-3 py-1.5 rounded-full bg-gradient-gold text-secondary-foreground shadow-soft hover:shadow-gold transition-shadow"
+            >
+              Go Premium
+            </Link>
+          </div>
         </div>
       </header>
 

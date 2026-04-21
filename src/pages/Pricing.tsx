@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Check, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePremium } from "@/hooks/usePremium";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 const PLANS = [
@@ -33,14 +35,17 @@ const FEATURES = [
 
 export const Pricing = () => {
   const [selected, setSelected] = useState<"monthly" | "yearly">("yearly");
-  const { isPremium, setIsPremium } = usePremium();
+  const { isPremium } = usePremium();
+  const { user } = useAuth();
 
   const handleSubscribe = () => {
-    // Stripe checkout will replace this once payments are enabled.
-    toast.info("Stripe checkout will launch here", {
-      description: "For now, previewing premium locally on this device.",
+    if (!user) {
+      toast.info("Sign in first", { description: "Create an account to subscribe and sync across devices." });
+      return;
+    }
+    toast.info("Stripe checkout coming next", {
+      description: "Payments will be enabled in the next step.",
     });
-    setIsPremium(true);
   };
 
   return (
@@ -99,20 +104,20 @@ export const Pricing = () => {
         ))}
       </ul>
 
-      <button
-        onClick={handleSubscribe}
-        disabled={isPremium}
-        className="w-full mt-8 py-4 rounded-full bg-gradient-burgundy text-primary-foreground font-ui font-semibold shadow-page hover:shadow-gold transition-shadow disabled:opacity-60"
-      >
-        {isPremium ? "✓ You're Premium" : `Subscribe — ${selected === "yearly" ? "$20/year" : "$2.99/month"}`}
-      </button>
-
-      {isPremium && (
-        <button
-          onClick={() => setIsPremium(false)}
-          className="w-full mt-3 text-xs text-muted-foreground font-ui underline"
+      {!user ? (
+        <Link
+          to="/auth"
+          className="block w-full mt-8 py-4 rounded-full bg-gradient-burgundy text-primary-foreground font-ui font-semibold shadow-page hover:shadow-gold transition-shadow text-center"
         >
-          (preview) Disable premium
+          Sign in to subscribe
+        </Link>
+      ) : (
+        <button
+          onClick={handleSubscribe}
+          disabled={isPremium}
+          className="w-full mt-8 py-4 rounded-full bg-gradient-burgundy text-primary-foreground font-ui font-semibold shadow-page hover:shadow-gold transition-shadow disabled:opacity-60"
+        >
+          {isPremium ? "✓ You're Premium" : `Subscribe — ${selected === "yearly" ? "$20/year" : "$2.99/month"}`}
         </button>
       )}
 
