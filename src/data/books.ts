@@ -1,4 +1,5 @@
-// Catholic Bible — books matching the CEVD (Contemporary English Version with Apocrypha) structure on bolls.life.
+// Catholic Bible — books matching the WEB (World English Bible, public domain)
+// catalog on bolls.life, including deuterocanonical books.
 // Each book has a `bollsId` mapping to the bolls.life numeric book ID for live text fetching.
 
 export type Testament = "old" | "new";
@@ -132,5 +133,5 @@ export function booksByGroup(group: BookGroup): BibleBook[] {
   return BOOKS.filter((b) => b.group === group);
 }
 
-export const TRANSLATION_CODE = "CEVD";
+export const TRANSLATION_CODE = "WEB";
 export const TRANSLATION_NAME = "Contemporary English Version";
