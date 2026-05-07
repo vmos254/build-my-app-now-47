@@ -75,7 +75,24 @@ export async function verifyWebhook(
   );
   const expected = new TextDecoder().decode(encode(new Uint8Array(signed)));
 
-  if (!v1Signatures.includes(expected)) throw new Error("Invalid webhook signature");
+  let valid = false;
+  for (const candidate of v1Signatures) {
+    if (constantTimeEqual(candidate, expected)) {
+      valid = true;
+    }
+  }
+  if (!valid) throw new Error("Invalid webhook signature");
 
   return JSON.parse(body);
+}
+
+function constantTimeEqual(a: string, b: string): boolean {
+  const aBytes = new TextEncoder().encode(a);
+  const bBytes = new TextEncoder().encode(b);
+  const len = Math.max(aBytes.length, bBytes.length);
+  let diff = aBytes.length ^ bBytes.length;
+  for (let i = 0; i < len; i++) {
+    diff |= (aBytes[i] ?? 0) ^ (bBytes[i] ?? 0);
+  }
+  return diff === 0;
 }
