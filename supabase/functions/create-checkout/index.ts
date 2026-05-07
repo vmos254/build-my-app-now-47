@@ -1,3 +1,4 @@
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { type StripeEnv, createStripeClient } from "../_shared/stripe.ts";
 
 const corsHeaders = {
@@ -13,11 +14,34 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { priceId, customerEmail, userId, returnUrl, environment } = await req.json();
+    // Require authenticated user — never trust client-supplied userId/email
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+    );
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const authedUserId = userData.user.id;
+    const authedEmail = userData.user.email ?? undefined;
+
+    const { priceId, returnUrl, environment } = await req.json();
 
     if (!priceId || !/^[a-zA-Z0-9_-]+$/.test(priceId)) throw new Error("Invalid priceId");
     if (environment !== "sandbox" && environment !== "live") throw new Error("Invalid environment");
-    if (!returnUrl) throw new Error("Missing returnUrl");
+    if (!returnUrl || typeof returnUrl !== "string") throw new Error("Missing returnUrl");
 
     const env: StripeEnv = environment;
     const stripe = createStripeClient(env);
@@ -32,11 +56,9 @@ Deno.serve(async (req) => {
       mode: isRecurring ? "subscription" : "payment",
       ui_mode: "embedded_page",
       return_url: returnUrl,
-      ...(customerEmail && { customer_email: customerEmail }),
-      ...(userId && {
-        metadata: { userId },
-        ...(isRecurring && { subscription_data: { metadata: { userId } } }),
-      }),
+      ...(authedEmail && { customer_email: authedEmail }),
+      metadata: { userId: authedUserId },
+      ...(isRecurring && { subscription_data: { metadata: { userId: authedUserId } } }),
     });
 
     return new Response(JSON.stringify({ clientSecret: session.client_secret }), {
