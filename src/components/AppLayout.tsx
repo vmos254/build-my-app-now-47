@@ -72,7 +72,7 @@ export const AppLayout = () => {
       </main>
 
       {/* Bottom nav (mobile-first) */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border/60">
+      <nav className="fixed bottom-0 inset-x-0 z-40 bg-background border-t border-border/60" style={{ paddingBottom: "env(safe-area-inset-bottom)", transform: "translateZ(0)", willChange: "transform" }}>
         <div className="container max-w-3xl mx-auto grid grid-cols-5 h-16 px-2">
           {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink
