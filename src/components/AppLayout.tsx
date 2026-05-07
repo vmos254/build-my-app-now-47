@@ -28,7 +28,7 @@ export const AppLayout = () => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top bar */}
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-background/80 border-b border-border/60">
+      <header className="sticky top-0 z-40 bg-background border-b border-border/60">
         <div className="container max-w-3xl mx-auto flex items-center justify-between h-14 px-4">
           <Link to="/" className="flex items-center gap-2 group">
             <div className="w-8 h-8 rounded-full bg-gradient-burgundy grid place-items-center shadow-soft">
@@ -72,7 +72,7 @@ export const AppLayout = () => {
       </main>
 
       {/* Bottom nav (mobile-first) */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border/60">
+      <nav className="fixed bottom-0 inset-x-0 z-40 bg-background border-t border-border/60" style={{ paddingBottom: "env(safe-area-inset-bottom)", transform: "translateZ(0)", willChange: "transform" }}>
         <div className="container max-w-3xl mx-auto grid grid-cols-5 h-16 px-2">
           {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink
