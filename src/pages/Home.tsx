@@ -22,7 +22,7 @@ export const Home = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-[hsl(25_30%_8%/0.55)] via-[hsl(25_30%_8%/0.45)] to-background" />
         <div className="relative container max-w-3xl mx-auto px-4 pt-12 pb-16 text-center">
           <span className="inline-flex items-center gap-1.5 text-[0.7rem] uppercase tracking-[0.2em] text-gold-soft font-ui font-medium">
-            <Sparkles className="w-3 h-3" /> Lumen Bible
+            <Sparkles className="w-3 h-3" /> Lumen — The Catholic Bible
           </span>
           <h1 className="font-display text-5xl md:text-6xl mt-3 text-[hsl(40_40%_96%)] leading-tight">
             The Catholic Bible,
