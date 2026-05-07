@@ -4,11 +4,12 @@ import { Check, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePremium } from "@/hooks/usePremium";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
+import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 
 const PLANS = [
   {
     id: "monthly" as const,
+    priceId: "premium_monthly",
     label: "Monthly",
     price: "$2.99",
     period: "/month",
@@ -16,6 +17,7 @@ const PLANS = [
   },
   {
     id: "yearly" as const,
+    priceId: "premium_yearly",
     label: "Yearly",
     price: "$20",
     period: "/year",
@@ -35,18 +37,30 @@ const FEATURES = [
 
 export const Pricing = () => {
   const [selected, setSelected] = useState<"monthly" | "yearly">("yearly");
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const { isPremium } = usePremium();
   const { user } = useAuth();
 
-  const handleSubscribe = () => {
-    if (!user) {
-      toast.info("Sign in first", { description: "Create an account to subscribe and sync across devices." });
-      return;
-    }
-    toast.info("Stripe checkout coming next", {
-      description: "Payments will be enabled in the next step.",
-    });
-  };
+  const selectedPlan = PLANS.find((p) => p.id === selected)!;
+
+  if (checkoutOpen && user) {
+    return (
+      <div className="container max-w-2xl mx-auto px-4 py-8 animate-fade-in">
+        <button
+          onClick={() => setCheckoutOpen(false)}
+          className="text-sm font-ui text-muted-foreground hover:text-foreground mb-4"
+        >
+          ← Back to plans
+        </button>
+        <StripeEmbeddedCheckout
+          priceId={selectedPlan.priceId}
+          customerEmail={user.email ?? undefined}
+          userId={user.id}
+          returnUrl={`${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="container max-w-xl mx-auto px-4 py-10 animate-fade-in">
@@ -72,7 +86,7 @@ export const Pricing = () => {
                 "relative text-left p-5 rounded-2xl border-2 transition-all",
                 active
                   ? "border-primary bg-card shadow-page"
-                  : "border-border bg-card/60 hover:border-muted-foreground/40"
+                  : "border-border bg-card/60 hover:border-muted-foreground/40",
               )}
             >
               {p.badge && (
@@ -113,7 +127,7 @@ export const Pricing = () => {
         </Link>
       ) : (
         <button
-          onClick={handleSubscribe}
+          onClick={() => setCheckoutOpen(true)}
           disabled={isPremium}
           className="w-full mt-8 py-4 rounded-full bg-gradient-burgundy text-primary-foreground font-ui font-semibold shadow-page hover:shadow-gold transition-shadow disabled:opacity-60"
         >
@@ -122,8 +136,8 @@ export const Pricing = () => {
       )}
 
       <p className="text-[0.7rem] text-muted-foreground text-center mt-5 font-ui leading-relaxed">
-        Web subscriptions are processed by Stripe. iOS &amp; Android subscriptions
-        will use Apple In-App Purchase and Google Play Billing once published.
+        Web subscriptions are processed securely. Apple Pay and Google Pay are
+        supported automatically on compatible devices.
       </p>
     </div>
   );

@@ -16,6 +16,8 @@ import { DailyReadings } from "@/pages/DailyReadings";
 import { Pricing } from "@/pages/Pricing";
 import { Install } from "@/pages/Install";
 import { Auth } from "@/pages/Auth";
+import CheckoutReturn from "@/pages/CheckoutReturn";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -27,7 +29,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <PaymentTestModeBanner />
           <Routes>
+            <Route path="/checkout/return" element={<CheckoutReturn />} />
             <Route element={<AppLayout />}>
               <Route path="/" element={<Home />} />
               <Route path="/bible" element={<BibleIndex />} />
