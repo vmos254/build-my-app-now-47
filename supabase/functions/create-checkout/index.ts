@@ -43,6 +43,25 @@ Deno.serve(async (req) => {
     if (environment !== "sandbox" && environment !== "live") throw new Error("Invalid environment");
     if (!returnUrl || typeof returnUrl !== "string") throw new Error("Missing returnUrl");
 
+    // Restrict returnUrl to a known allow-list of origins to prevent open-redirect/phishing
+    const allowedOrigins = [
+      "https://lumencatholic.com",
+      "https://www.lumencatholic.com",
+      "https://id-preview--7d1c2d52-6965-43ec-a57f-de36f904b3c7.lovable.app",
+      "https://7d1c2d52-6965-43ec-a57f-de36f904b3c7.lovable.app",
+      "http://localhost:8080",
+      "http://localhost:5173",
+    ];
+    let parsedReturnUrl: URL;
+    try {
+      parsedReturnUrl = new URL(returnUrl);
+    } catch {
+      throw new Error("Invalid returnUrl");
+    }
+    if (!allowedOrigins.includes(parsedReturnUrl.origin)) {
+      throw new Error("returnUrl origin not allowed");
+    }
+
     const env: StripeEnv = environment;
     const stripe = createStripeClient(env);
 
