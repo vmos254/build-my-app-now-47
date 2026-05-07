@@ -58,7 +58,7 @@ export function Install() {
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10 mb-4">
             <Smartphone className="h-10 w-10 text-primary" />
           </div>
-          <h1 className="font-serif text-4xl md:text-5xl font-semibold mb-3">Install Lumen Bible</h1>
+          <h1 className="font-serif text-4xl md:text-5xl font-semibold mb-3">Install Lumen</h1>
           <p className="text-muted-foreground text-lg">
             Add Lumen to your home screen for a full-screen, app-like experience.
           </p>
