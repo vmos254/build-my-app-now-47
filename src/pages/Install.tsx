@@ -137,7 +137,7 @@ function AndroidSteps({ onInstall, canPrompt }: { onInstall: () => void; canProm
       <h2 className="font-serif text-2xl font-semibold mb-4">On Android (Chrome)</h2>
       {canPrompt && (
         <Button onClick={onInstall} size="lg" className="w-full mb-6">
-          <Download className="h-4 w-4 mr-2" /> Install Lumen Bible
+          <Download className="h-4 w-4 mr-2" /> Install Lumen
         </Button>
       )}
       <ol className="space-y-4">
