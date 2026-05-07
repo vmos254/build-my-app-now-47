@@ -28,7 +28,7 @@ export const AppLayout = () => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top bar */}
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-background/80 border-b border-border/60">
+      <header className="sticky top-0 z-40 bg-background border-b border-border/60">
         <div className="container max-w-3xl mx-auto flex items-center justify-between h-14 px-4">
           <Link to="/" className="flex items-center gap-2 group">
             <div className="w-8 h-8 rounded-full bg-gradient-burgundy grid place-items-center shadow-soft">
