@@ -52,10 +52,14 @@ export type Database = {
       }
       subscribers: {
         Row: {
+          cancel_at_period_end: boolean
           created_at: string
           email: string
+          environment: string
           id: string
+          price_id: string | null
           stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           subscribed: boolean
           subscription_end: string | null
           subscription_tier: string | null
@@ -63,10 +67,14 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cancel_at_period_end?: boolean
           created_at?: string
           email: string
+          environment?: string
           id?: string
+          price_id?: string | null
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           subscribed?: boolean
           subscription_end?: string | null
           subscription_tier?: string | null
@@ -74,10 +82,14 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cancel_at_period_end?: boolean
           created_at?: string
           email?: string
+          environment?: string
           id?: string
+          price_id?: string | null
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           subscribed?: boolean
           subscription_end?: string | null
           subscription_tier?: string | null
