@@ -34,8 +34,9 @@ export const AppLayout = () => {
             <div className="w-8 h-8 rounded-full bg-gradient-burgundy grid place-items-center shadow-soft">
               <Sparkles className="w-4 h-4 text-primary-foreground" strokeWidth={1.5} />
             </div>
-            <span className="font-display text-xl text-foreground group-hover:text-primary transition-colors">
-              Lumen
+            <span className="flex flex-col leading-none group-hover:text-primary transition-colors">
+              <span className="font-display text-xl text-foreground">Lumen</span>
+              <span className="font-ui text-[10px] uppercase tracking-[0.15em] text-muted-foreground">The Catholic Bible</span>
             </span>
           </Link>
           <div className="flex items-center gap-2">
