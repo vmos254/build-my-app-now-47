@@ -1,5 +1,5 @@
-// Live Bible loading from bolls.life — Contemporary English Version w/ Apocrypha (CEVD).
-// Caches each chapter in localStorage indefinitely after first fetch.
+// Live Bible loading from bolls.life — World English Bible (WEB), public domain,
+// includes deuterocanonical books. Caches each chapter in localStorage after first fetch.
 
 import { getBook, TRANSLATION_CODE } from "./books";
 
