@@ -21,6 +21,7 @@ import { Auth } from "@/pages/Auth";
 import CheckoutReturn from "@/pages/CheckoutReturn";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import NotFound from "./pages/NotFound.tsx";
+import { Privacy } from "@/pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const App = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/install" element={<Install />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>

@@ -4,11 +4,8 @@ import { AdMob, BannerAdOptions, BannerAdSize, BannerAdPosition, AdMobInitializa
 // Replace these with your real AdMob unit IDs from admob.google.com
 // During testing, use the test IDs below (they always show test ads)
 export const ADMOB_IDS = {
-  // Android test banner: ca-app-pub-3940256099942544/6300978111
-  // iOS test banner:     ca-app-pub-3940256099942544/2934735716
-  // Replace with your real IDs before publishing:
-  android: "ca-app-pub-3940256099942544/6300978111",
-  ios: "ca-app-pub-3940256099942544/2934735716",
+  android: "ca-app-pub-1385820604802800/7245756150",
+  ios: "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX", // ← replace after adding iOS app in AdMob
 };
 
 export async function initializeAdMob() {
