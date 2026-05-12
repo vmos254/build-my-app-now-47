@@ -4,7 +4,6 @@ import heroImage from "@/assets/hero-bible.jpg";
 import { verseOfTheDay } from "@/data/chapters";
 import { useContinueReading } from "@/hooks/useBookmarks";
 import { usePremium } from "@/hooks/usePremium";
-import { AdSlot } from "@/components/AdSlot";
 
 export const Home = () => {
   const votd = verseOfTheDay();
@@ -87,8 +86,6 @@ export const Home = () => {
             </div>
           </Link>
         )}
-
-        {!isPremium && <AdSlot />}
 
         {/* Premium CTA */}
         {!isPremium && (

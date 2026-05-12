@@ -8,6 +8,7 @@ import { usePremium } from "@/hooks/usePremium";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { AdSlot } from "@/components/AdSlot";
+import { useAdBanner } from "@/hooks/useAdBanner";
 
 const HIGHLIGHT_BG: Record<string, string> = {
   gold: "bg-highlight-gold/60",
@@ -24,6 +25,7 @@ export const ChapterReader = () => {
   const { isPremium } = usePremium();
   const { bookmarks, find, toggle, atLimit } = useBookmarks(isPremium);
   const { update } = useContinueReading();
+  useAdBanner();
 
   const [data, setData] = useState<ChapterData | null>(null);
   const [loading, setLoading] = useState<boolean>(!isChapterCached(bookId, chapterNum));
