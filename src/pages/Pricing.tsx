@@ -1,12 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePremium } from "@/hooks/usePremium";
 import { useAuth } from "@/hooks/useAuth";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
+import { Capacitor } from "@capacitor/core";
+import {
+  getOfferings,
+  purchasePackage,
+  restorePurchases,
+  syncPurchaseToSupabase,
+  PRODUCT_IDS,
+  initializePurchases,
+} from "@/lib/purchases";
+import { toast } from "sonner";
 
-const PLANS = [
+// Web prices (Stripe, already live)
+const WEB_PLANS = [
   {
     id: "monthly" as const,
     priceId: "premium_monthly",
@@ -26,6 +37,29 @@ const PLANS = [
   },
 ];
 
+// Native prices (App Store / Play Store via RevenueCat)
+const NATIVE_PLANS = [
+  {
+    id: "monthly" as const,
+    productId: PRODUCT_IDS.monthly,
+    label: "Monthly",
+    price: "$4.99",
+    period: "/month",
+    note: "Cancel anytime",
+    isYearly: false,
+  },
+  {
+    id: "yearly" as const,
+    productId: PRODUCT_IDS.yearly,
+    label: "Yearly",
+    price: "$39.99",
+    period: "/year",
+    note: "Save 33% — 4 months free",
+    badge: "Best value",
+    isYearly: true,
+  },
+];
+
 const FEATURES = [
   "Ad-free reading experience",
   "Unlimited bookmarks & highlights",
@@ -35,15 +69,92 @@ const FEATURES = [
   "Sync across all your devices",
 ];
 
+const isNative = Capacitor.isNativePlatform();
+
 export const Pricing = () => {
   const [selected, setSelected] = useState<"monthly" | "yearly">("yearly");
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const { isPremium } = usePremium();
+  const [purchasing, setPurchasing] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  // rcOfferings holds the RevenueCat Package objects keyed by product ID
+  const [rcPackages, setRcPackages] = useState<Record<string, unknown>>({});
+
+  const { isPremium, refresh } = usePremium();
   const { user } = useAuth();
 
-  const selectedPlan = PLANS.find((p) => p.id === selected)!;
+  // Initialize RevenueCat and load offerings when on native
+  useEffect(() => {
+    if (!isNative || !user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        await initializePurchases(user.id, user.email ?? "");
+        const offering = await getOfferings();
+        if (cancelled || !offering) return;
+        const map: Record<string, unknown> = {};
+        for (const pkg of offering.availablePackages) {
+          // pkg.product.identifier matches the product ID you created in the store
+          const id: string = (pkg as { product: { identifier: string } }).product.identifier;
+          map[id] = pkg;
+        }
+        setRcPackages(map);
+      } catch {
+        // Offerings may not be available in simulator — silently ignore
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
 
-  if (checkoutOpen && user) {
+  const handleNativePurchase = async () => {
+    if (!user) return;
+    const plan = NATIVE_PLANS.find((p) => p.id === selected)!;
+    const pkg = rcPackages[plan.productId];
+    if (!pkg) {
+      toast.error("Products not loaded yet. Please try again in a moment.");
+      return;
+    }
+    setPurchasing(true);
+    try {
+      await purchasePackage(pkg);
+      await syncPurchaseToSupabase(
+        user.id,
+        user.email ?? "",
+        plan.productId,
+        plan.isYearly,
+      );
+      await refresh();
+      toast.success("Welcome to Lumen Premium!");
+    } catch (e: unknown) {
+      const err = e as { userCancelled?: boolean; message?: string };
+      if (!err?.userCancelled) {
+        toast.error(err?.message ?? "Purchase failed. Please try again.");
+      }
+    } finally {
+      setPurchasing(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!user) return;
+    setRestoring(true);
+    try {
+      await restorePurchases();
+      await refresh();
+      if (isPremium) {
+        toast.success("Purchases restored!");
+      } else {
+        toast.info("No active subscription found to restore.");
+      }
+    } catch {
+      toast.error("Restore failed. Please try again.");
+    } finally {
+      setRestoring(false);
+    }
+  };
+
+  // Web checkout flow (Stripe) — unchanged
+  const selectedWebPlan = WEB_PLANS.find((p) => p.id === selected)!;
+  if (!isNative && checkoutOpen && user) {
     return (
       <div className="container max-w-2xl mx-auto px-4 py-8 animate-fade-in">
         <button
@@ -53,7 +164,7 @@ export const Pricing = () => {
           ← Back to plans
         </button>
         <StripeEmbeddedCheckout
-          priceId={selectedPlan.priceId}
+          priceId={selectedWebPlan.priceId}
           customerEmail={user.email ?? undefined}
           userId={user.id}
           returnUrl={`${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`}
@@ -61,6 +172,8 @@ export const Pricing = () => {
       </div>
     );
   }
+
+  const plans = isNative ? NATIVE_PLANS : WEB_PLANS;
 
   return (
     <div className="container max-w-xl mx-auto px-4 py-10 animate-fade-in">
@@ -76,7 +189,7 @@ export const Pricing = () => {
       </header>
 
       <div className="mt-8 grid grid-cols-2 gap-3">
-        {PLANS.map((p) => {
+        {plans.map((p) => {
           const active = selected === p.id;
           return (
             <button
@@ -89,7 +202,7 @@ export const Pricing = () => {
                   : "border-border bg-card/60 hover:border-muted-foreground/40",
               )}
             >
-              {p.badge && (
+              {"badge" in p && p.badge && (
                 <span className="absolute -top-2.5 right-3 text-[0.6rem] uppercase tracking-widest font-ui font-semibold bg-gradient-gold text-secondary-foreground px-2 py-0.5 rounded-full">
                   {p.badge}
                 </span>
@@ -125,6 +238,28 @@ export const Pricing = () => {
         >
           Sign in to subscribe
         </Link>
+      ) : isNative ? (
+        <>
+          <button
+            onClick={handleNativePurchase}
+            disabled={isPremium || purchasing}
+            className="w-full mt-8 py-4 rounded-full bg-gradient-burgundy text-primary-foreground font-ui font-semibold shadow-page hover:shadow-gold transition-shadow disabled:opacity-60"
+          >
+            {isPremium
+              ? "✓ You're Premium"
+              : purchasing
+              ? "Processing…"
+              : `Subscribe — ${selected === "yearly" ? "$39.99/year" : "$4.99/month"}`}
+          </button>
+          <button
+            onClick={handleRestore}
+            disabled={restoring || isPremium}
+            className="w-full mt-3 py-3 rounded-full border border-border text-muted-foreground font-ui text-sm flex items-center justify-center gap-2 hover:border-primary/40 hover:text-foreground transition-colors disabled:opacity-40"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            {restoring ? "Restoring…" : "Restore Purchases"}
+          </button>
+        </>
       ) : (
         <button
           onClick={() => setCheckoutOpen(true)}
@@ -136,8 +271,9 @@ export const Pricing = () => {
       )}
 
       <p className="text-[0.7rem] text-muted-foreground text-center mt-5 font-ui leading-relaxed">
-        Web subscriptions are processed securely. Apple Pay and Google Pay are
-        supported automatically on compatible devices.
+        {isNative
+          ? "Payment will be charged to your Apple/Google account. Subscription auto-renews unless cancelled at least 24 hours before the end of the current period."
+          : "Web subscriptions are processed securely. Apple Pay and Google Pay are supported automatically on compatible devices."}
       </p>
     </div>
   );

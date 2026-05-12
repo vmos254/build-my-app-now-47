@@ -3,6 +3,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { Capacitor } from "@capacitor/core";
 
 import { AppLayout } from "@/components/AppLayout";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -22,6 +24,24 @@ import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
 
+function AndroidBackHandler() {
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    let listener: { remove: () => void } | null = null;
+    import("@capacitor/app").then(({ App: CapApp }) => {
+      CapApp.addListener("backButton", ({ canGoBack }) => {
+        if (canGoBack) {
+          window.history.back();
+        } else {
+          CapApp.exitApp();
+        }
+      }).then((l) => { listener = l; });
+    });
+    return () => { listener?.remove(); };
+  }, []);
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -29,6 +49,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <AndroidBackHandler />
           <PaymentTestModeBanner />
           <Routes>
             <Route path="/checkout/return" element={<CheckoutReturn />} />

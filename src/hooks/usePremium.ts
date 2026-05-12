@@ -1,51 +1,67 @@
-// Server-verified premium status, backed by the `subscribers` table in Lovable Cloud.
-// Anonymous users are never premium. Stripe checkout will populate the subscribers row.
-
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { Capacitor } from "@capacitor/core";
+
+async function checkSupabasePremium(userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("subscribers")
+    .select("subscribed, subscription_end")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  return (
+    !!data?.subscribed &&
+    (!data.subscription_end || new Date(data.subscription_end) > new Date())
+  );
+}
+
+async function checkNativePremium(): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) return false;
+  try {
+    const { checkNativeEntitlement } = await import("@/lib/purchases");
+    return checkNativeEntitlement();
+  } catch {
+    return false;
+  }
+}
 
 export function usePremium() {
   const { user } = useAuth();
-  const [isPremium, setIsPremiumState] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
+  const check = useCallback(async () => {
     if (!user) {
-      setIsPremiumState(false);
+      setIsPremium(false);
       setLoading(false);
       return;
     }
-
     setLoading(true);
-    (async () => {
-      const { data } = await supabase
-        .from("subscribers")
-        .select("subscribed, subscription_end")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (cancelled) return;
-
-      const active =
-        !!data?.subscribed &&
-        (!data.subscription_end || new Date(data.subscription_end) > new Date());
-
-      setIsPremiumState(active);
-      setLoading(false);
-    })();
-
-    return () => {
-      cancelled = true;
-    };
+    // Check Supabase first (authoritative), fall back to native entitlement
+    const [supabaseResult, nativeResult] = await Promise.all([
+      checkSupabasePremium(user.id),
+      checkNativePremium(),
+    ]);
+    setIsPremium(supabaseResult || nativeResult);
+    setLoading(false);
   }, [user]);
 
-  // Kept for backwards-compat with the Pricing preview button. Once Stripe
-  // is wired up, this becomes a no-op (server is the source of truth).
-  const setIsPremium = (_v: boolean) => {
-    // intentionally unused — premium status is set by Stripe webhook
-  };
+  useEffect(() => {
+    let cancelled = false;
+    check().then(() => {
+      if (cancelled) return;
+    });
+    return () => { cancelled = true; };
+  }, [check]);
 
-  return { isPremium, setIsPremium, loading };
+  // refresh() is called by Pricing.tsx immediately after a successful purchase
+  const refresh = useCallback(async () => {
+    await check();
+  }, [check]);
+
+  // Kept for backwards-compat — premium status is set by Stripe webhook / RevenueCat
+  const setIsPremiumLegacy = (_v: boolean) => {};
+
+  return { isPremium, setIsPremium: setIsPremiumLegacy, loading, refresh };
 }

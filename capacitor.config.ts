@@ -2,17 +2,28 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.lumencatholic.app',
-  appName: 'Lumen',
+  appName: 'Lumen - Catholic Bible',
   webDir: 'dist',
-  server: {
-    url: 'https://7d1c2d52-6965-43ec-a57f-de36f904b3c7.lovableproject.com?forceHideBadge=true',
-    cleartext: true,
-  },
   ios: {
     contentInset: 'always',
   },
   android: {
     backgroundColor: '#5b1a1f',
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 1800,
+      launchAutoHide: true,
+      backgroundColor: '#5b1a1f',
+      showSpinner: false,
+      androidScaleType: 'CENTER_CROP',
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
+    StatusBar: {
+      style: 'LIGHT',
+      backgroundColor: '#5b1a1f',
+    },
   },
 };
 
