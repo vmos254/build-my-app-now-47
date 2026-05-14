@@ -22,6 +22,7 @@ import CheckoutReturn from "@/pages/CheckoutReturn";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import NotFound from "./pages/NotFound.tsx";
 import { Privacy } from "@/pages/Privacy";
+import { DeleteData } from "@/pages/DeleteData";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/install" element={<Install />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/delete-data" element={<DeleteData />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
