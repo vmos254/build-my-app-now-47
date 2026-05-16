@@ -23,6 +23,7 @@ import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import NotFound from "./pages/NotFound.tsx";
 import { Privacy } from "@/pages/Privacy";
 import { DeleteData } from "@/pages/DeleteData";
+import AuthCallback from "@/pages/AuthCallback";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => (
           <PaymentTestModeBanner />
           <Routes>
             <Route path="/checkout/return" element={<CheckoutReturn />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route element={<AppLayout />}>
               <Route path="/" element={<Home />} />
               <Route path="/bible" element={<BibleIndex />} />
