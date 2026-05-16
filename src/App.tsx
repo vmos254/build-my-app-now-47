@@ -8,6 +8,7 @@ import { Capacitor } from "@capacitor/core";
 
 import { AppLayout } from "@/components/AppLayout";
 import { AuthProvider } from "@/hooks/useAuth";
+import { useDailyReminder } from "@/hooks/useDailyReminder";
 import { Home } from "@/pages/Home";
 import { BibleIndex } from "@/pages/BibleIndex";
 import { ChapterList } from "@/pages/ChapterList";
@@ -26,6 +27,11 @@ import { DeleteData } from "@/pages/DeleteData";
 import AuthCallback from "@/pages/AuthCallback";
 
 const queryClient = new QueryClient();
+
+function DailyReminderSetup() {
+  useDailyReminder();
+  return null;
+}
 
 function AndroidBackHandler() {
   useEffect(() => {
@@ -53,6 +59,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <AndroidBackHandler />
+          <DailyReminderSetup />
           <PaymentTestModeBanner />
           <Routes>
             <Route path="/checkout/return" element={<CheckoutReturn />} />
