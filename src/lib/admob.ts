@@ -10,8 +10,14 @@ export const ADMOB_IDS = {
 
 export async function initializeAdMob() {
   if (!Capacitor.isNativePlatform()) return;
+  if (Capacitor.getPlatform() === "ios") {
+    try {
+      await AdMob.requestTrackingAuthorization();
+    } catch {
+      // user may decline or API unavailable — safe to ignore
+    }
+  }
   const options: AdMobInitializationOptions = {
-    requestTrackingAuthorization: true, // iOS ATT prompt
     testingDevices: [],
     initializeForTesting: false,
   };
